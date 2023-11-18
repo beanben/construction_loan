@@ -1,0 +1,3 @@
+cost category,cost type,supplier,amount,start date,end date
+Acquisition costs,Land acquisition costs,,10,01/01/2020,01/01/2020
+Construction costs,Build costs,builder1,20,01/01/2020,21/01/2020
