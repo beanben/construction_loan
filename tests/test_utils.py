@@ -13,14 +13,38 @@ from construction_loan.utils import (read_csv_to_dataframe,
                                       validate_cost_category_not_empty,
                                       )
 
-
 valid_data_csv = 'tests/valid_data.csv'
-missing_columns_data_csv = 'tests/missing_columns_data.csv'
-non_numeric_amounts_csv = 'tests/non_numeric_amounts.csv'
-invalid_dates_format_csv = 'tests/invalid_dates_format.csv'
-invalid_dates_csv = 'tests/invalid_dates.csv'
-cost_category_empty_csv = 'tests/cost_category_empty.csv'
+valid_data = [
+    ['cost category', 'cost type', 'supplier', 'amount', 'start date', 'end date'],
+    ['Acquisition costs', 'Land acquisition costs', '', '10', '01/01/2020', '01/01/2020'],
+    ['Construction costs', 'Build costs', 'builder1','20', '01/01/2020', '21/01/2020'],
+]
 
+missing_columns_data_csv = 'tests/missing_columns_data.csv'
+missing_columns_data = [
+    ['cost category', 'cost type', 'amount', 'start date', 'end date'],
+    ['Acquisition costs', 'Land acquisition costs', '10', '01/01/2020', '01/01/2020'],
+]
+non_numeric_amounts_csv = 'tests/non_numeric_amounts.csv'
+non_numeric_amounts = [
+    ['cost category', 'cost type', 'supplier', 'amount', 'start date', 'end date'],
+    ['Construction costs', 'Build costs', 'builder1','ba', '01/01/2020', '21/01/2020'],
+]
+invalid_dates_format_csv = 'tests/invalid_dates_format.csv'
+invalid_dates_format = [
+    ['cost category', 'cost type', 'supplier', 'amount', 'start date', 'end date'],
+    ['Acquisition costs', 'Land acquisition costs', '', '10', '12-26-2020', '12-28-2020'],
+]
+invalid_dates_csv = 'tests/invalid_dates.csv'
+invalid_dates = [
+    ['cost category', 'cost type', 'supplier', 'amount', 'start date', 'end date'],
+    ['Acquisition costs', 'Land acquisition costs', '', '10', '01/01/2020', '01/01/2019'],
+]
+cost_category_empty_csv = 'tests/cost_category_empty.csv'
+cost_category_empty = [
+    ['cost_category','cost type', 'supplier', 'amount', 'start date', 'end date'],
+    ['', 'Land acquisition costs', '', '10', '01/01/2020', '01/01/2019'],
+]
 
 # Writing to the CSV files
 def write_to_csv(file_name, data_rows):
@@ -30,37 +54,6 @@ def write_to_csv(file_name, data_rows):
 
 @pytest.fixture(scope="module")
 def data_setup():
-    valid_data = [
-        ['cost category', 'cost type', 'supplier', 'amount', 'start date', 'end date'],
-        ['Acquisition costs', 'Land acquisition costs', '', '10', '01/01/2020', '01/01/2020'],
-        ['Construction costs', 'Build costs', 'builder1','20', '01/01/2020', '21/01/2020'],
-    ]
-
-    missing_columns_data = [
-        ['cost category', 'cost type', 'amount', 'start date', 'end date'],
-        ['Acquisition costs', 'Land acquisition costs', '10', '01/01/2020', '01/01/2020'],
-    ]
-
-    non_numeric_amounts = [
-        ['cost category', 'cost type', 'supplier', 'amount', 'start date', 'end date'],
-        ['Construction costs', 'Build costs', 'builder1','ba', '01/01/2020', '21/01/2020'],
-    ]
-
-    invalid_dates_format = [
-        ['cost category', 'cost type', 'supplier', 'amount', 'start date', 'end date'],
-        ['Acquisition costs', 'Land acquisition costs', '', '10', '12-26-2020', '12-28-2020'],
-    ]
-
-    invalid_dates = [
-        ['cost category', 'cost type', 'supplier', 'amount', 'start date', 'end date'],
-        ['Acquisition costs', 'Land acquisition costs', '', '10', '01/01/2020', '01/01/2019'],
-    ]
-
-    cost_category_empty = [
-        ['cost_category','cost type', 'supplier', 'amount', 'start date', 'end date'],
-        ['', 'Land acquisition costs', '', '10', '01/01/2020', '01/01/2019'],
-    ]
-
     write_to_csv(valid_data_csv, valid_data)
     write_to_csv(missing_columns_data_csv, missing_columns_data)
     write_to_csv(non_numeric_amounts_csv, non_numeric_amounts)

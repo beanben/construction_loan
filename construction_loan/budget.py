@@ -26,6 +26,9 @@ class Budget:
         validate_cost_category_not_empty(budget_df, 'cost_category')
 
         return budget_df
+    
+    def total_cost(self):
+        return self.budget_df.amount.sum()
 
 # import numpy as np
 # import pdb
@@ -234,4 +237,4 @@ class Budget:
 
 # # Call the function for debugging
 # df = set_project_budget_from_csv('tests/valid_data.csv')
-budget_df = Budget('tests/valid_data.csv').budget_df
+# budget_df = Budget('tests/valid_data.csv').budget_df

@@ -1,13 +1,18 @@
-import pandas as pd
 import pytest
 import csv
-import re
-import os
-from datetime import datetime
 from construction_loan.budget import Budget
-# import pdb
+import pandas as pd
+import re
+from datetime import datetime
+import os
+import pdb
 
 valid_data_csv = 'tests/valid_data.csv'
+valid_data = [
+    ['cost category', 'cost type', 'supplier', 'amount', 'start date', 'end date'],
+    ['Acquisition costs', 'Land acquisition costs', '', '10', '01/01/2020', '01/01/2020'],
+    ['Construction costs', 'Build costs', 'builder1','20', '01/01/2020', '21/01/2020'],
+]
 
 # Writing to the CSV files
 def write_to_csv(file_name, data_rows):
@@ -15,27 +20,21 @@ def write_to_csv(file_name, data_rows):
         writer = csv.writer(file)
         writer.writerows(data_rows)
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope='module')
 def budget_data_setup():
-    print("budget_data_setup called")
-
-    valid_data = [
-        ['cost category', 'cost type', 'supplier', 'amount', 'start date', 'end date'],
-        ['Acquisition costs', 'Land acquisition costs', '', '10', '01/01/2020', '01/01/2020'],
-        ['Construction costs', 'Build costs', 'builder1','20', '01/01/2020', '21/01/2020'],
-    ]
-
+    # Setup code to create CSV
     write_to_csv(valid_data_csv, valid_data)
 
-    # yield
+    yield
 
-    # os.remove(valid_data_csv)
-    
+    os.remove(valid_data_csv)
+
+
 def test_set_project_budget_from_csv(budget_data_setup):
-
-    print("test_set_project_budget_from_csv called")
-    print(valid_data_csv)
+    # Instantiate Budget here, after the fixture has run
     budget = Budget(valid_data_csv).budget_df
+
+    # Assertions
     assert isinstance(budget, pd.DataFrame)
     assert not budget.empty
 
@@ -55,6 +54,11 @@ def test_set_project_budget_from_csv(budget_data_setup):
     assert budget.at[1, 'amount'] == 20
     assert budget.at[1, 'start_date'] == datetime.strptime('2020-01-01', '%Y-%m-%d').date()
     assert budget.at[1, 'end_date'] == datetime.strptime('2020-01-21', '%Y-%m-%d').date()
+
+# test total_cost method
+def test_total_cost(budget_data_setup):
+    budget = Budget(valid_data_csv)
+    assert budget.total_cost() == 30
 
 
 
