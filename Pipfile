@@ -7,6 +7,7 @@ name = "pypi"
 pandas = "*"
 pytest = "*"
 pytest-flakes = "*"
+matplotlib = "*"
 
 [dev-packages]
 ipykernel = "*"
