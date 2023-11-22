@@ -1,7 +1,7 @@
 import pandas as pd
-from construction_loan.budget import Budget
+from construction_loan.utils import time_execution
 
-class CashFlow:
+class Cashflow:
     def __init__(self, data):
             if isinstance(data, pd.DataFrame):
                 self.df = data
@@ -9,9 +9,11 @@ class CashFlow:
                 raise ValueError("Invalid input type for CashFlow initialization: the input must be a DataFrame")
     
     @classmethod
+    @time_execution
     def from_budget(cls, budget_instance):
+
         # get the budget dataframe
-        budget_df = budget_instance.budget_df
+        budget_df = budget_instance.df
 
         # Calculate the number of days and daily cost
         budget_df['num_days'] = (pd.to_datetime(budget_df['end_date']) - pd.to_datetime(budget_df['start_date'])).dt.days + 1

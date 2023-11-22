@@ -1,6 +1,6 @@
 
 import pytest
-from construction_loan.cashflow import CashFlow
+from construction_loan.cashflow import Cashflow
 from construction_loan.budget import Budget
 import csv
 import os
@@ -29,14 +29,10 @@ def cashflow_data_setup():
     os.remove(valid_budget_data_csv)
 
 def test_cashflow_from_budget(cashflow_data_setup):
-    budget = Budget(valid_budget_data_csv) # Create a sample budget instance
-    cashflow = CashFlow.from_budget(budget)
-    
-    # Assert that the cash flow object is created correctly
-    assert isinstance(cashflow, CashFlow)
-    # pdb.set_trace() # to debug
+    budget = Budget.from_csv(valid_budget_data_csv) # Create a sample budget instance
+    cashflow = Cashflow.from_budget(budget)
 
-    # Assert if the sum of all amounts in cashflow is equal to the sum of all amounts in budget
+    assert isinstance(cashflow, Cashflow)
     assert cashflow.total_cost() == budget.total_cost()
     
 # def test_cashflow_from_csv():
@@ -48,8 +44,8 @@ def test_cashflow_from_budget(cashflow_data_setup):
 #     assert cashflow.data.shape[0] > 0  # Assuming `data` attribute in CashFlow class
 
 def test_cashflow_calculation(cashflow_data_setup):
-    budget = Budget(valid_budget_data_csv) # Create a sample budget instance
-    cashflow = CashFlow.from_budget(budget)
+    budget = Budget.from_csv(valid_budget_data_csv) # Create a sample budget instance
+    cashflow = Cashflow.from_budget(budget)
     
     # Perform some calculations on the cash flow data
     total_cost = cashflow.total_cost()

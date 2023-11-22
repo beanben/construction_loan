@@ -1,5 +1,17 @@
 import pandas as pd
 import pdb
+import time
+import functools
+
+def time_execution(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        print(f"Execution of {func.__name__} took {end_time - start_time} seconds")
+        return result
+    return wrapper
 
 def read_csv_to_dataframe(csv_file_path: str) -> pd.DataFrame:
     """
@@ -52,6 +64,9 @@ def validate_amount_column(budget_df: pd.DataFrame, amount_column: str) -> None:
         # Convert string representations of numbers (with commas and spaces) to float
         budget_df[amount_column] = budget_df[amount_column].replace(',', '', regex=True).str.strip()
         budget_df[amount_column] = pd.to_numeric(budget_df[amount_column], errors='raise')
+        # print("before conversion: ", budget_df[amount_column].dtype)
+        budget_df[amount_column] = budget_df[amount_column].astype(float)
+        # print("after conversion: ", budget_df[amount_column].dtype)
     except ValueError:
         # Raise an error if conversion fails due to invalid formats
         raise ValueError(f"The '{amount_column}' column must contain valid numeric data")
@@ -117,27 +132,3 @@ def validate_cost_category_not_empty(budget_df: pd.DataFrame, cost_category_colu
     if budget_df[cost_category_column].isnull().any():
         raise ValueError(f"The '{cost_category_column}' column must not be empty")
 
-# def set_project_budget_from_csv(csv_file_path: str) -> pd.DataFrame:
-#     """
-#     Reads a CSV file containing the budget for a construction project, validates, and preprocesses it.
-
-#     Parameters:
-#     csv_file_path (str): The file path to the CSV file.
-
-#     Returns:
-#     pd.DataFrame: A pandas DataFrame containing the validated and preprocessed budget data.
-#     """
-#     # Read the CSV file into a DataFrame
-#     budget_df = read_csv_to_dataframe(csv_file_path)
-
-#     # Define the required columns
-#     required_columns = ['cost_category', 'cost_type', 'supplier', 'amount', 'start_date', 'end_date']
-
-#     # Perform validations
-#     validate_columns(budget_df, required_columns)
-#     validate_amount_column(budget_df, 'amount')
-#     validate_date_format_columns(budget_df, ['start_date', 'end_date'])
-#     validate_start_date_before_end_date(budget_df, 'start_date', 'end_date')
-#     validate_cost_category_not_empty(budget_df, 'cost_category')
-
-#     return budget_df

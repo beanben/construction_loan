@@ -30,34 +30,33 @@ def budget_data_setup():
     os.remove(valid_data_csv)
 
 
-def test_set_project_budget_from_csv(budget_data_setup):
-    # Instantiate Budget here, after the fixture has run
-    budget = Budget(valid_data_csv).budget_df
+def test_budget_from_csv(budget_data_setup):
+    budget = Budget.from_csv(valid_data_csv)
+    budget_df = budget.df
 
     # Assertions
-    assert isinstance(budget, pd.DataFrame)
-    assert not budget.empty
+    assert isinstance(budget, Budget)
+    assert not budget_df.empty
 
-    for char in budget.columns:
+    for char in budget_df.columns:
         assert re.search(r' ', char) is None
 
-    assert budget.at[0, 'cost_category'] == 'Acquisition costs'
-    assert budget.at[0, 'cost_type'] == 'Land acquisition costs'
-    assert pd.isna(budget.at[0, 'supplier'])
-    assert budget.at[0, 'amount'] == 10
-    assert budget.at[0, 'start_date'] == datetime.strptime('2020-01-01', '%Y-%m-%d').date()
-    assert budget.at[0, 'end_date'] == datetime.strptime('2020-01-01', '%Y-%m-%d').date()
+    assert budget_df.at[0, 'cost_category'] == 'Acquisition costs'
+    assert budget_df.at[0, 'cost_type'] == 'Land acquisition costs'
+    assert pd.isna(budget_df.at[0, 'supplier'])
+    assert budget_df.at[0, 'amount'] == 10
+    assert budget_df.at[0, 'start_date'] == datetime.strptime('2020-01-01', '%Y-%m-%d').date()
+    assert budget_df.at[0, 'end_date'] == datetime.strptime('2020-01-01', '%Y-%m-%d').date()
 
-    assert budget.at[1, 'cost_category'] == 'Construction costs'
-    assert budget.at[1, 'cost_type'] == 'Build costs'
-    assert budget.at[1, 'supplier'] == 'builder1'
-    assert budget.at[1, 'amount'] == 20
-    assert budget.at[1, 'start_date'] == datetime.strptime('2020-01-01', '%Y-%m-%d').date()
-    assert budget.at[1, 'end_date'] == datetime.strptime('2020-01-21', '%Y-%m-%d').date()
+    assert budget_df.at[1, 'cost_category'] == 'Construction costs'
+    assert budget_df.at[1, 'cost_type'] == 'Build costs'
+    assert budget_df.at[1, 'supplier'] == 'builder1'
+    assert budget_df.at[1, 'amount'] == 20
+    assert budget_df.at[1, 'start_date'] == datetime.strptime('2020-01-01', '%Y-%m-%d').date()
+    assert budget_df.at[1, 'end_date'] == datetime.strptime('2020-01-21', '%Y-%m-%d').date()
 
-# test total_cost method
 def test_total_cost(budget_data_setup):
-    budget = Budget(valid_data_csv)
+    budget = Budget.from_csv(valid_data_csv)
     assert budget.total_cost() == 30
 
 

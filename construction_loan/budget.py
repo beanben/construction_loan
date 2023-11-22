@@ -1,17 +1,23 @@
 import pandas as pd
 from construction_loan.utils import (read_csv_to_dataframe, 
-                   validate_columns, 
-                   validate_amount_column, 
-                   validate_date_format_columns,
-                   validate_start_date_before_end_date,
-                   validate_cost_category_not_empty)
+                    validate_columns, 
+                    validate_amount_column, 
+                    validate_date_format_columns,
+                    validate_start_date_before_end_date,
+                    validate_cost_category_not_empty,
+                    time_execution)
                    
 
 class Budget:
-    def __init__(self, csv_file_path: str):
-        self.budget_df = self.set_project_budget_from_csv(csv_file_path)
-
-    def set_project_budget_from_csv(self, csv_file_path: str) -> pd.DataFrame:
+    def __init__(self, data):
+            if isinstance(data, pd.DataFrame):
+                self.df = data
+            else:
+                raise ValueError("Invalid input type for Budget initialization: the input must be a DataFrame")
+    
+    @classmethod
+    @time_execution
+    def from_csv(cls, csv_file_path: str) -> pd.DataFrame:
         # Read the CSV file into a DataFrame
         budget_df = read_csv_to_dataframe(csv_file_path)
 
@@ -25,10 +31,10 @@ class Budget:
         validate_start_date_before_end_date(budget_df, 'start_date', 'end_date')
         validate_cost_category_not_empty(budget_df, 'cost_category')
 
-        return budget_df
+        return cls(budget_df)
     
     def total_cost(self):
-        return self.budget_df.amount.sum()
+        return self.df.amount.sum()
 
 # import numpy as np
 # import pdb
