@@ -132,3 +132,12 @@ def validate_cost_category_not_empty(budget_df: pd.DataFrame, cost_category_colu
     if budget_df[cost_category_column].isnull().any():
         raise ValueError(f"The '{cost_category_column}' column must not be empty")
 
+def dataframe_to_csv(df: pd.DataFrame, csv_file_path: str) -> None:
+    """
+    Writes a DataFrame to a CSV file.
+
+    Parameters:
+    df (DataFrame): The DataFrame to write.
+    csv_file_path (str): Path to the CSV file.
+    """
+    df.to_csv(csv_file_path, index=False)
