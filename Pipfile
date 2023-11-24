@@ -11,6 +11,7 @@ matplotlib = "*"
 plotly = "*"
 jupyterlab = "*"
 voila = "*"
+dash = "*"
 
 [dev-packages]
 ipykernel = "*"
