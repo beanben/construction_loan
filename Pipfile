@@ -10,6 +10,7 @@ pytest-flakes = "*"
 matplotlib = "*"
 plotly = "*"
 jupyterlab = "*"
+voila = "*"
 
 [dev-packages]
 ipykernel = "*"
