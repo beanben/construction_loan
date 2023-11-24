@@ -8,6 +8,8 @@ pandas = "*"
 pytest = "*"
 pytest-flakes = "*"
 matplotlib = "*"
+plotly = "*"
+jupyterlab = "*"
 
 [dev-packages]
 ipykernel = "*"
