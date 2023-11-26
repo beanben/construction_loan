@@ -75,6 +75,16 @@ def validate_amount_column(budget_df: pd.DataFrame, amount_column: str) -> None:
     if not pd.api.types.is_numeric_dtype(budget_df[amount_column]):
         raise ValueError(f"The '{amount_column}' column must contain numeric data")
 
+def convert_to_valid_date(date_str):
+    acceptable_formats = ['%d-%b-%y', '%d-%b-%Y', '%d/%m/%y', '%d/%m/%Y']
+    for fmt in acceptable_formats:
+        try:
+            return pd.to_datetime(date_str, format=fmt).date()
+        except ValueError:
+            continue
+    raise ValueError(f"The date '{date_str}' is not in an acceptable format. "
+                     "Acceptable formats are: 'dd-MMM-yy', 'dd-MMM-yyyy', 'dd/mm/yy', or 'dd/mm/yyyy'.")
+
      
 def validate_date_format_columns(budget_df: pd.DataFrame, date_columns: list) -> None:
     """
@@ -87,20 +97,8 @@ def validate_date_format_columns(budget_df: pd.DataFrame, date_columns: list) ->
     Raises:
     ValueError: If the date columns do not contain dates in acceptable formats.
     """
-    acceptable_formats = ['%d-%b-%y', '%d-%b-%Y', '%d/%m/%y', '%d/%m/%Y']
-    
     for date_column in date_columns:
-        original_column = budget_df[date_column].copy()
-        for fmt in acceptable_formats:
-            temp_column = pd.to_datetime(original_column, format=fmt, errors='coerce')
-            if not temp_column.isnull().all():
-                break
-        
-            
-        if temp_column.isnull().any():
-            raise ValueError(f"The '{date_column}' column must contain dates in acceptable formats: 'dd-MMM-yy', 'dd-MMM-yyyy', 'dd/mm/yy', or 'dd/mm/yyyy'")
-
-        budget_df[date_column] = temp_column.dt.date
+        budget_df[date_column] = budget_df[date_column].apply(convert_to_valid_date)
 
         
 def validate_start_date_before_end_date(budget_df: pd.DataFrame, start_date_column: str, end_date_column: str) -> None:
@@ -141,3 +139,23 @@ def dataframe_to_csv(df: pd.DataFrame, csv_file_path: str) -> None:
     csv_file_path (str): Path to the CSV file.
     """
     df.to_csv(csv_file_path, index=False)
+
+
+def verify_date_format(date_str: str) -> bool:
+    """
+    Verifies if a string is in an acceptable date format.
+
+    Parameters:
+    date_str (str): The string to verify.
+
+    Returns:
+    bool: True if the string is in an acceptable date format, False otherwise.
+    """
+    acceptable_formats = ['%d-%b-%y', '%d-%b-%Y', '%d/%m/%y', '%d/%m/%Y']
+    for fmt in acceptable_formats:
+        try:
+            pd.to_datetime(date_str, format=fmt)
+            return True
+        except ValueError:
+            pass
+    return False

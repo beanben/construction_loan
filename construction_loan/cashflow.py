@@ -1,5 +1,7 @@
 import pandas as pd
-from construction_loan.utils import time_execution, dataframe_to_csv
+from construction_loan.utils import (time_execution, 
+                                     dataframe_to_csv, 
+                                     convert_to_valid_date)
 
 class Cashflow:
     billing_period = 'M'
@@ -11,7 +13,7 @@ class Cashflow:
                 raise ValueError("Invalid input type for CashFlow initialization: the input must be a DataFrame")
     
     @classmethod
-    @time_execution
+    # @time_execution
     def from_budget(cls, budget_instance):
 
         # get the budget dataframe
@@ -19,7 +21,7 @@ class Cashflow:
 
         # Calculate the number of days and daily cost
         budget_df['num_days'] = (pd.to_datetime(budget_df['end_date']) - pd.to_datetime(budget_df['start_date'])).dt.days + 1
-        budget_df['daily_cost'] = (budget_df['amount'] / budget_df['num_days']).round(2)
+        budget_df['daily_cost'] = (budget_df['amount'] / budget_df['num_days'])
 
         # Define columns index
         index_col = pd.MultiIndex.from_frame(budget_df[["cost_category", "cost_type", "supplier"]])
@@ -43,7 +45,7 @@ class Cashflow:
 
         
         # group the cashflow by billing period
-        cashflow_df = cashflow_df.resample(cls.billing_period).sum()
+        cashflow_df = cashflow_df.resample(cls.billing_period).sum().round(2)
 
         return cls(cashflow_df)
 
@@ -81,6 +83,48 @@ class Cashflow:
         cashflow_df_summary['total'] = cashflow_df_summary.sum(axis=1)
 
         return cashflow_df_summary
+    
+    # def list_costs_on(self, date) -> pd.DataFrame:
+    #     cashflow_df = self.df
+    #     return cashflow_df.loc(date)
+
+    def get_costs_for_date(self, date_str) -> pd.Series:
+        """
+        Returns all costs and amounts for a specific date.
+
+        :param date: The date for which costs are to be retrieved.
+        :return: A DataFrame with costs and amounts for the given date.
+        """
+        date = convert_to_valid_date(date_str)
+        datetime = pd.Timestamp(date)
+
+        # Check if the date is within the range of the DataFrame
+        if datetime not in self.df.index:
+            raise ValueError(f"No data available for the date: {date_str}")
+        
+        date_series = self.df.loc[datetime]
+        date_series["Total"] = date_series.sum(axis=0)
+        
+        return date_series[date_series!=0]
+    
+    def get_cumul_costs_for_date(self, date_str) -> pd.Series:
+        """
+        Returns all costs and amounts for a specific date.
+
+        :param date: The date for which costs are to be retrieved.
+        :return: A DataFrame with costs and amounts for the given date.
+        """
+        date = convert_to_valid_date(date_str)
+        datetime = pd.Timestamp(date)
+
+        # Check if the date is within the range of the DataFrame
+        if datetime not in self.df.index:
+            raise ValueError(f"No data available for the date: {date_str}")
+        
+        date_series = self.df.loc[:datetime].sum(axis=0)
+        date_series["Total"] = date_series.sum(axis=0)
+        
+        return date_series[date_series!=0]
 
     
     def df_to_csv(self, csv_file_path):

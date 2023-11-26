@@ -2,11 +2,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 from construction_loan.cashflow import Cashflow
+import pdb
 
 class DataVisualiser:
     def __init__(self):
         # Set display options in the constructor
-        pd.options.display.float_format = '{:,.0f}'.format
+        pd.options.display.float_format = '{:,.2f}'.format
         pd.set_option('display.max_columns', None)
         pd.set_option('display.max_rows', None)
 
@@ -32,7 +33,8 @@ class DataVisualiser:
                 mode='lines+markers', 
                 name=column, 
                 hoverinfo='text',
-                text=[f"{column}: {y}" for y in df[column]],
+                # text=[f"{column}: {y:,.2f}" for y in df[column]],
+                text=[f"Date: {date.strftime('%d-%b-%Y')}<br>{column}: {value:,.2f}" for date, value in zip(df.index, df[column])],
                 line=dict(dash='solid' if cost_category == 'Acquisition costs' else 'dot')
             ))
 
@@ -63,19 +65,35 @@ class DataVisualiser:
 
         # Flatten the MultiIndex for easier handling
         df = cashflow_instance.df.copy()
-        df.columns = [' '.join(map(str, col)).strip() for col in df.columns.values]
-
+        # pdb.set_trace()
+        df.columns = [' / '.join(map(str, col)).strip() for col in df.columns.values]
+        
         # Calculate cumulative sum for each column
         cumulative_df = df.cumsum()
 
         # Create a stacked bar chart for each cost_type within each cost_category
         fig = go.Figure()
+
         for column in cumulative_df.columns:
+            # Calculate cumulative costs for each category and cost type up to the current date
+            hover_text = []
+            cumulative_total = 0
+            for date in cumulative_df.index:
+                costs_to_date = [f"{col}: {cumulative_df.at[date, col]:,.2f}" for col in cumulative_df.columns if cumulative_df.at[date, col]]
+                
+                cumulative_total = sum([cumulative_df.at[date, col] for col in cumulative_df.columns])
+                # Combine costs with line breaks and add a total spent to date at the bottom
+                hover_text.append(
+                    f"Date: {date.strftime('%d-%b-%Y')}<br>Total cumul: {cumulative_total:,.2f}<br><br>" +
+                    "<br>".join(costs_to_date)
+                    )
+
             fig.add_trace(go.Bar(
-                x=cumulative_df.index, 
-                y=cumulative_df[column], 
+                x=cumulative_df.index,
+                y=cumulative_df[column],
                 name=column,
-                # text=[f"{column}: {y}" for y in cumulative_df[column]]
+                hoverinfo='text',
+                hovertext=hover_text,
             ))
 
         # Update layout for the graph

@@ -16,7 +16,7 @@ class Budget:
                 raise ValueError("Invalid input type for Budget initialization: the input must be a DataFrame")
     
     @classmethod
-    @time_execution
+    # @time_execution
     def from_csv(cls, csv_file_path: str) -> pd.DataFrame:
         # Read the CSV file into a DataFrame
         budget_df = read_csv_to_dataframe(csv_file_path)

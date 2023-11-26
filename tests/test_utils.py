@@ -8,6 +8,7 @@ from datetime import datetime
 from construction_loan.utils import (read_csv_to_dataframe, 
                                       validate_columns,
                                       validate_amount_column,
+                                      convert_to_valid_date,
                                       validate_date_format_columns,
                                       validate_start_date_before_end_date,
                                       validate_cost_category_not_empty,
@@ -94,6 +95,15 @@ def test_validate_amount_column(data_setup):
     # Test with negative amounts
     with pytest.raises(ValueError):
         validate_amount_column(df_non_numeric_amounts, 'amount')
+
+def test_convert_to_valid_date():
+    # Test with valid date
+    assert convert_to_valid_date('01/01/2020') == datetime.strptime('01/01/2020', '%m/%d/%Y').date()
+
+    # Test with invalid date
+    with pytest.raises(ValueError):
+        convert_to_valid_date('12-26-2020')
+
 
 def test_validate_date_format_columns(data_setup):
     df_invalid_dates_format = read_csv_to_dataframe(invalid_dates_format_csv)
