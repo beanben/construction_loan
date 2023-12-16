@@ -2,50 +2,38 @@ import pandas as pd
 
 
 class Loan:
-    def __init__(
-            self,
-            total_commitment,
-            capital_commitment,
-            LTC_covenant, 
-            LTV_covenant, 
-            duration_months, 
-            arrangement_fee_pct, 
-            margin_pct, 
-            non_utilisation_fee_pct, 
-            exit_fee_pct):
+    def __init__(self):
+        self.total_commitment = None
+        self.capital_commitment = None
+        self.LTC_covenant = None
+        self.LTV_covenant = None
+        self.duration_months = None
+        self.arrangement_fee_pct = None
+        self.margin_pct = None
+        self.non_utilisation_fee_pct = None
+        self.exit_fee_pct = None
+        self.fundable_costs = None
 
-        self.total_commitment = total_commitment
-        self.capital_commitment = capital_commitment
-        self.LTC_covenant = LTC_covenant
-        self.LTV_covenant = LTV_covenant
-        self.duration_months = duration_months
-        self.arrangement_fee_pct = arrangement_fee_pct
-        self.margin_pct = margin_pct
-        self.non_utilisation_fee_pct = non_utilisation_fee_pct
-        self.exit_fee_pct = exit_fee_pct
+    def calculate_terms(self, fundable_costs, ltc_covenant, returns_targetted):
+        # Set the fundable_costs, LTC_covenant, and returns_targetted
+        self.fundable_costs = fundable_costs
+        self.LTC_covenant = ltc_covenant
+        
+        # calculate minimum duration in months
+        self.calculate_duration_months()
 
-    
+        # CONTINUE HERE
 
-    # @classmethod
-    # def size_from_budget(cls, budget, **kwargs):
-    #     """
-    #     Class method to create a Loan instance from a budget.
+    def calculate_duration_months(self):
+        # Assuming 'fundable_costs' has a DateTimeIndex
+        if not self.fundable_costs.empty and isinstance(self.fundable_costs.index, pd.DatetimeIndex):
+            start_date = self.fundable_costs.index.min()
+            end_date = self.fundable_costs.index.max()
 
-    #     :param budget: Total budget or cost of the project being funded.
-    #     """
-    #     loan_instance = cls(**kwargs)
+            # Calculate the difference in months
+            duration = (end_date.year - start_date.year) * 12 + end_date.month - start_date.month
 
-    #     # Additional logic for budget-based loan sizing
-    #     return loan_instance
-
-    # def set_terms(self, **kwargs):
-    #     """
-    #     Method to set the terms of the loan.
-
-    #     :param kwargs: Additional terms of the loan.
-    #     """
-    #     for key, value in kwargs.items():
-    #         if hasattr(self, key):
-    #             setattr(self, key, value)
-    #         else:
-    #             print(f"Attribute '{key}' does not exist in the Loan class.")
+            # Assign duration to the class attribute
+            self.duration_months = duration
+        else:
+            raise ValueError("Fundable costs are empty or do not have a DateTimeIndex.")
