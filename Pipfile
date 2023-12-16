@@ -12,6 +12,7 @@ plotly = "*"
 jupyterlab = "*"
 voila = "*"
 dash = "*"
+ipdb = "*"
 
 [dev-packages]
 ipykernel = "*"

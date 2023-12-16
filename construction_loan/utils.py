@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import pdb
 import time
 import functools
@@ -25,10 +26,33 @@ def read_csv_to_dataframe(csv_file_path: str) -> pd.DataFrame:
     """
     # Read the CSV file
     df = pd.read_csv(csv_file_path, header=0, na_values=['NA', 'null', '-'])
-    
+
+    # trim whitespace from data
+    df = df.apply(lambda col: col.str.strip() if col.dtype == "object" else col)
+    df.replace({"-": pd.NA}, inplace=True)
+
+    # Replace missing values with zero
+    df.fillna(0.0, inplace=True)
+
     # Format column names
     df.columns = df.columns.str.strip().str.replace(' ', '_').str.lower()
     return df
+
+def fill_empty_values_of_string_columns(df: pd.DataFrame, string_columns: list) -> None:
+    """
+    Fills empty values in the specified string columns with 'NoData'.
+
+    Parameters:
+    budget_df (DataFrame): The DataFrame to fill.
+    string_columns (list): List of string column names.
+    """
+    empty_values = ['', ' ', np.nan, None, '0.0']
+
+    # make sure the columns are of type string
+    df[string_columns] = df[string_columns].astype(str)
+
+    for string_column in string_columns:
+        df[string_column] = df[string_column].replace(empty_values, 'NoData')
 
 def validate_columns(budget_df: pd.DataFrame, required_columns: list) -> None:
     """
@@ -116,19 +140,6 @@ def validate_start_date_before_end_date(budget_df: pd.DataFrame, start_date_colu
     if not (budget_df[start_date_column] <= budget_df[end_date_column]).all():
         raise ValueError(f"The '{start_date_column}' column must contain dates that are before or equal to the dates in the '{end_date_column}' column")
    
-def validate_cost_category_not_empty(budget_df: pd.DataFrame, cost_category_column: str) -> None:
-    """
-    Validates if the data in the cost category column is not empty.
-
-    Parameters:
-    budget_df (DataFrame): The DataFrame to validate.
-    cost_category_column (str): The name of the cost category column.
-
-    Raises:
-    ValueError: If the cost category column is empty.
-    """
-    if budget_df[cost_category_column].isnull().any():
-        raise ValueError(f"The '{cost_category_column}' column must not be empty")
 
 def dataframe_to_csv(df: pd.DataFrame, csv_file_path: str) -> None:
     """
@@ -141,21 +152,21 @@ def dataframe_to_csv(df: pd.DataFrame, csv_file_path: str) -> None:
     df.to_csv(csv_file_path, index=False)
 
 
-def verify_date_format(date_str: str) -> bool:
-    """
-    Verifies if a string is in an acceptable date format.
+# def verify_date_format(date_str: str) -> bool:
+#     """
+#     Verifies if a string is in an acceptable date format.
 
-    Parameters:
-    date_str (str): The string to verify.
+#     Parameters:
+#     date_str (str): The string to verify.
 
-    Returns:
-    bool: True if the string is in an acceptable date format, False otherwise.
-    """
-    acceptable_formats = ['%d-%b-%y', '%d-%b-%Y', '%d/%m/%y', '%d/%m/%Y']
-    for fmt in acceptable_formats:
-        try:
-            pd.to_datetime(date_str, format=fmt)
-            return True
-        except ValueError:
-            pass
-    return False
+#     Returns:
+#     bool: True if the string is in an acceptable date format, False otherwise.
+#     """
+#     acceptable_formats = ['%d-%b-%y', '%d-%b-%Y', '%d/%m/%y', '%d/%m/%Y']
+#     for fmt in acceptable_formats:
+#         try:
+#             pd.to_datetime(date_str, format=fmt)
+#             return True
+#         except ValueError:
+#             pass
+#     return False

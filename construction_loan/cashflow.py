@@ -1,7 +1,11 @@
 import pandas as pd
+import pdb
 from construction_loan.utils import (time_execution, 
                                      dataframe_to_csv, 
-                                     convert_to_valid_date)
+                                     convert_to_valid_date,
+                                     read_csv_to_dataframe,
+                                     convert_to_valid_date,
+                                     fill_empty_values_of_string_columns)
 
 class Cashflow:
     billing_period = 'M'
@@ -49,18 +53,53 @@ class Cashflow:
 
         return cls(cashflow_df)
 
+
+    @classmethod
+    def from_csv(cls, csv_file_path):
+        # Read the CSV file with the first three rows as header for MultiIndex
+        df = read_csv_to_dataframe(csv_file_path)
+        fill_empty_values_of_string_columns(df, ['cost_category', 'cost_type', 'supplier'])
+        df = df.transpose()
+        
+        # Define columns index
+        column_names = df.iloc[:3].index.values
+        column_names = [name.strip().replace(' ', '_').lower() for name in column_names]
+        index_col = pd.MultiIndex.from_frame(df.iloc[:3].transpose(), names = column_names)
+        
+        # Define time index
+        dates = df.index.values[3:]
+        index_dates = [convert_to_valid_date(date_str) for date_str in dates]
+        
+         # Initialize cashflow DataFrame
+        cashflow_df = pd.DataFrame(index=index_dates, columns=index_col).fillna(0.0).astype(float)
+
+        # add the data to the cashflow_df
+        df_data = df.iloc[3:].copy()
+        df_data.index = cashflow_df.index
+        for index, column_name in enumerate(cashflow_df.columns):
+            # convert the data to numeric
+            data_as_string = df_data.iloc[:, index].astype(str)
+            data_no_comma = data_as_string.str.replace(',', '')
+            costs = pd.to_numeric(data_no_comma, errors='coerce')
+
+            # add the data to the cashflow_df
+            cashflow_df[column_name] = costs
+
+        return cls(cashflow_df)
+
+
     def total_cost(self):
         return self.df.sum().sum()
 
     def costs_grouped_by_level(self, level):
-        df = self.df.T.groupby(level=level).sum().T
+        df = self.df.T.groupby(level=level, sort=False).sum().T
         df['total'] = df.sum(axis=1)
         return df
     
     # summarise the cashflow by key cost_category: acquisition costs, construction costs and put the rest in a new cateogry called other costs
     def costs_summary(self):
         # Group the cashflow by cost_category and sum
-        grouped_df = self.df.T.groupby(level='cost_category').sum().T
+        grouped_df = self.df.T.groupby(level='cost_category', sort=False).sum().T
 
         # Calculate the total for each cost_category
         total_by_category = grouped_df.sum(axis=0)
@@ -75,9 +114,11 @@ class Cashflow:
         for category in top4_categories:
             cashflow_df_summary[category] = grouped_df[category]
 
-        # group from the grouped_df the rest of the categories in a new category called other
-        other_data = grouped_df.loc[:, ~grouped_df.columns.isin(top4_categories)].copy()
-        cashflow_df_summary['other'] = other_data.sum(axis=1)
+        # Check if there are more categories beyond the top 4
+        if len(total_by_category) > 4:
+            # group from the grouped_df the rest of the categories in a new category called other
+            other_data = grouped_df.loc[:, ~grouped_df.columns.isin(top4_categories)].copy()
+            cashflow_df_summary['other'] = other_data.sum(axis=1)
         
         # add a total column
         cashflow_df_summary['total'] = cashflow_df_summary.sum(axis=1)
@@ -129,4 +170,17 @@ class Cashflow:
     
     def df_to_csv(self, csv_file_path):
         dataframe_to_csv(self.df, csv_file_path)
-    
+        
+
+# for debugging
+def debugging():
+    cashflow_csv_file = './data/jensco_cf - v2.csv'
+    cashflow_instance = Cashflow.from_csv(cashflow_csv_file)
+
+# to launch debugging:
+if __name__ == "__main__":
+    debugging()
+
+# go in construction_laon folder and run:
+# python -m construction_loan.cashflow
+

@@ -43,7 +43,7 @@ def test_budget_from_csv(budget_data_setup):
 
     assert budget_df.at[0, 'cost_category'] == 'Acquisition costs'
     assert budget_df.at[0, 'cost_type'] == 'Land acquisition costs'
-    assert pd.isna(budget_df.at[0, 'supplier'])
+    assert budget_df.at[0, 'supplier'] == 'NoData'
     assert budget_df.at[0, 'amount'] == 10
     assert budget_df.at[0, 'start_date'] == datetime.strptime('2020-01-01', '%Y-%m-%d').date()
     assert budget_df.at[0, 'end_date'] == datetime.strptime('2020-01-01', '%Y-%m-%d').date()
@@ -59,45 +59,20 @@ def test_total_cost(budget_data_setup):
     budget = Budget.from_csv(valid_data_csv)
     assert budget.total_cost() == 30
 
+def test_total_cost_by_level():
+    budget = Budget.from_csv(valid_data_csv)
 
+    # Call the method
+    result = budget.total_cost_by_level('cost_type')
 
+    # Expected result
+    expected_data = {
+        'Land acquisition costs': 10,
+        'Build costs': 20,
+        'Total': 30
+    }
+    expected_df = pd.Series(expected_data, name='amount')
+    expected_df.index.name = 'cost_type'
 
-
-
-# # def test_spread_costs_evenly():
-#     # Create a sample DataFrame
-#     data = {
-#         'cost_category': ['Category1', 'Category2'],
-#         'cost_type': ['Type1', 'Type2'],
-#         'supplier': ['Supplier1', 'Supplier2'],
-#         'start_date': [datetime(2020, 1, 1), datetime(2020, 1, 5)],
-#         'end_date': [datetime(2020, 1, 3), datetime(2020, 1, 6)],
-#         'amount': [300, 200]
-#     }
-#     budget_df = pd.DataFrame(data)
-
-#     # Convert start_date and end_date to datetime.date objects
-#     budget_df['start_date'] = pd.to_datetime(budget_df['start_date'])
-#     budget_df['end_date'] = pd.to_datetime(budget_df['end_date'])
-
-#     # Call the function
-#     result_df = spread_costs_evenly(budget_df)
-
-#     # Test 1: Check if result is a DataFrame
-#     assert isinstance(result_df, pd.DataFrame)
-
-#     # Test 2: Check the structure of the DataFrame
-#     assert all(col in result_df.columns for col in budget_df[['cost_category', 'cost_type', 'supplier']].itertuples(index=False, name=None))
-
-#     # Test 3: Check the calculation of daily costs
-#     # For Category1, Type1, Supplier1: 300 / 3 days = 100 per day
-#     # For Category2, Type2, Supplier2: 200 / 2 days = 100 per day
-#     assert result_df.loc['2020-01-01', ('Category1', 'Type1', 'Supplier1')] == 100
-#     assert result_df.loc['2020-01-05', ('Category2', 'Type2', 'Supplier2')] == 100
-
-#     # Test 4: Check for correct spreading of costs
-#     assert result_df.loc['2020-01-02', ('Category1', 'Type1', 'Supplier1')] == 100
-#     assert result_df.loc['2020-01-04', ('Category2', 'Type2', 'Supplier2')] == 0  # No cost on this day
-
-#     #  Test 5: Check that amounts in budget_df are in line with total costs in result_df
-#     assert budget_df['amount'].sum() == result_df.sum().sum()
+    # Check if the result matches the expected output
+    pd.testing.assert_series_equal(result, expected_df)

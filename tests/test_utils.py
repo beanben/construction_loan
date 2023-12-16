@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import pytest
 import pdb
 import csv
@@ -6,12 +7,12 @@ import os
 import re
 from datetime import datetime
 from construction_loan.utils import (read_csv_to_dataframe, 
+                                     fill_empty_values_of_string_columns,
                                       validate_columns,
                                       validate_amount_column,
                                       convert_to_valid_date,
                                       validate_date_format_columns,
-                                      validate_start_date_before_end_date,
-                                      validate_cost_category_not_empty,
+                                      validate_start_date_before_end_date
                                       )
 
 valid_data_csv = 'tests/valid_data.csv'
@@ -41,11 +42,11 @@ invalid_dates = [
     ['cost category', 'cost type', 'supplier', 'amount', 'start date', 'end date'],
     ['Acquisition costs', 'Land acquisition costs', '', '10', '01/01/2020', '01/01/2019'],
 ]
-cost_category_empty_csv = 'tests/cost_category_empty.csv'
-cost_category_empty = [
-    ['cost_category','cost type', 'supplier', 'amount', 'start date', 'end date'],
-    ['', 'Land acquisition costs', '', '10', '01/01/2020', '01/01/2019'],
-]
+# cost_category_empty_csv = 'tests/cost_category_empty.csv'
+# cost_category_empty = [
+#     ['cost_category','cost type', 'supplier', 'amount', 'start date', 'end date'],
+#     ['', 'Land acquisition costs', '', '10', '01/01/2020', '01/01/2019'],
+# ]
 
 # Writing to the CSV files
 def write_to_csv(file_name, data_rows):
@@ -60,7 +61,6 @@ def data_setup():
     write_to_csv(non_numeric_amounts_csv, non_numeric_amounts)
     write_to_csv(invalid_dates_format_csv, invalid_dates_format)
     write_to_csv(invalid_dates_csv, invalid_dates)
-    write_to_csv(cost_category_empty_csv, cost_category_empty)
 
     yield
 
@@ -69,7 +69,6 @@ def data_setup():
     os.remove(non_numeric_amounts_csv)
     os.remove(invalid_dates_format_csv)
     os.remove(invalid_dates_csv)
-    os.remove(cost_category_empty_csv)
     
 
 
@@ -81,6 +80,26 @@ def test_read_csv_to_dataframe(data_setup):
 
     for char in df.columns:
         assert re.search(r' ', char) is None
+
+def test_fill_empty_values_of_string_columns():
+    # Create a sample DataFrame
+    data = {
+        'column1': ['data1', '', 'data3', ' ', np.nan, None, '0.0'],
+        'column2': [1, 2, 3, 4, 5, 6, 7],
+        'column3': ['data1', 'data2', 'data3', '', ' ', np.nan, '0.0']
+    }
+    df = pd.DataFrame(data)
+
+    # Columns to fill
+    string_columns = ['column1', 'column3']
+
+    # Apply the function
+    fill_empty_values_of_string_columns(df, string_columns)
+
+    # Check if the function correctly filled the empty values
+    for col in string_columns:
+        assert all(x == 'NoData' if x in ['', ' ', np.nan, None, '0.0'] else True for x in df[col]), f"Failed for column {col}"
+
 
 def test_validate_columns(data_setup):
     required_columns = ['cost_category', 'cost_type', 'supplier', 'amount', 'start_date', 'end_date']
@@ -116,9 +135,3 @@ def test_validate_start_date_before_end_date(data_setup):
     # Test with invalid dates
     with pytest.raises(ValueError):
         validate_start_date_before_end_date(df_invalid_dates, 'start_date', 'end_date')
-
-def test_cost_category_not_empty(data_setup):
-    df_cost_category_empty = read_csv_to_dataframe(cost_category_empty_csv)
-    # Test with empty cost category
-    with pytest.raises(ValueError):
-        validate_cost_category_not_empty(df_cost_category_empty, 'cost_category')
